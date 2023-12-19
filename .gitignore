@@ -1,3 +1,9 @@
+# Files in the directory
+
+*.tar
+H:\UCDavis\Year1\Winter_Quarter\Rotations\celltracker\data\
+H:\UCDavis\Year1\Winter_Quarter\Rotations\celltracker\12859_2013_6077_MOESM1_ESM_Matlab\
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
