@@ -49,7 +49,7 @@ For this rotation, we would like to change the cell detection method from manual
 1.  None of these cells divide, I don't have to worry about lineage tracing
 2.  The only cells that move a certain distance **must** be microglia, I can do filtering based on track length over the 50 frames
 
-# Avenues explored
+# Avenues explored and subsequently abandonned
 
 -  celltracker: Hu T, Xu S, Wei L, Zhang X, Wang X. CellTracker: an automated toolbox for single-cell segmentation and tracking of time-lapse microscopy images. Bioinformatics. 2021 Apr 19;37(2):285-287. doi: 10.1093/bioinformatics/btaa1106. PMID: 33416830.
 
@@ -81,13 +81,18 @@ Then I made a R script to output various graphs of interest
 -  Spider plot
 -  Statistical analysis on multiple parameters such as : Average speed, directionality, distance...
 
+**Zoomed-in triculture well after segmentation and tracking**
 
+![Screenshot](data/triculturetracked.png)
 
+**Spider plot examples**
 
+![Screenshot](data/spiderplot.png)
 
+# Nota Bene
 
-
-
+This README doc is missing details about parameters and how to install the various softwares used as well as the model I used.
+If I don't come back to it, please contact me at mhardy@ucdavis.edu 
 
 
 
