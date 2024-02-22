@@ -30,7 +30,7 @@ For this rotation, we would like to change the cell detection method from manual
 1.  The supplied data are brighfield images with no markers to help segmentation or cell type identification (example below)
 -  Common segmentation methods will not work (thresholding, watershed...)
 -  The cells are crowded
--  The background in the well can look like it's scratched because the cells are on a microchip-type support, used to do electrotaxis
+-  The background in the well can look like it's scratched because the cells are on a microchip-type support, used to do electrotaxis which shows up in the imaging as blurry scratches
 -  The images progressively slide down during imaging (can be corrected but was not adressed in the timespan I spent on this project)
 
 ![Screenshot](data/image.png)
@@ -47,7 +47,7 @@ For this rotation, we would like to change the cell detection method from manual
 ## Strengths
 
 1.  None of these cells divide, I don't have to worry about lineage tracing
-2.  The only cells that move a certain distance **must** be microglia, I can do filtering based on track length over the 50 frames
+2.  The only cells that move a certain distance **can only** be microglia, I can do filtering based on track length over the 50 frames
 
 # Avenues explored and subsequently abandonned
 
