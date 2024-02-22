@@ -14,7 +14,7 @@ Broadly, these tricultures are composed of
 The feat of this paper is to have found a media without serum (toxic to neurons) that can still support microglia cell function.
 Tricultures of rat neurons, astrocytes and microglia allow for the study of crosstalk between the three essential components of the central nervous system (CNS) in mammals. Microglial cells have previously been described as the main immune defense of the CNS. They are resident macrophages which are crucial to the maintenance of the CNS homeostasis and must react quickly in the presence of pathogenic agents and aggregating peptides. As such, microglial cells can adopt an amoeboid-like shape to quickly move through neurons as scavenger cells and digest unwanted materials before extensive damage happens to the tissue.
 
-In their amoeboid shapes, these cells can be seen to move in the tricultures the Seker lab is using as models to explore neuroinflammation, neurodegeneration and other disorders that may occur in the CNS. However, the current method to track these moving cells involves identifying and tracing them by hand in each video taken with the microscope to generate tracks with a Fiji plugin.
+In their amoeboid shapes, these cells can be seen to move in the tricultures the Seker lab is using as models to explore neuroinflammation, neurodegeneration and other disorders that may occur in the CNS. However, the current method to track these moving cells involves identifying and tracing them by hand in each video taken with the microscope to generate tracks with a ImageJ plugin.
 
 For this rotation, we would like to change the cell detection method from manual to automated. We are planning to train and use a neural network to recognize our cells. Additionally, we would like to use Cellprofiler to track these detected cells and develop a script that could take the generated track tables and output a few summary graphs containing the number of cells tracked, their phenotype and their speeds.
 
@@ -51,7 +51,7 @@ For this rotation, we would like to change the cell detection method from manual
 
 # Avenues explored and subsequently abandonned
 
--  celltracker: Hu T, Xu S, Wei L, Zhang X, Wang X. CellTracker: an automated toolbox for single-cell segmentation and tracking of time-lapse microscopy images. Bioinformatics. 2021 Apr 19;37(2):285-287. doi: 10.1093/bioinformatics/btaa1106. PMID: 33416830.
+-  celltracker (used inside of CellProfiler): Hu T, Xu S, Wei L, Zhang X, Wang X. CellTracker: an automated toolbox for single-cell segmentation and tracking of time-lapse microscopy images. Bioinformatics. 2021 Apr 19;37(2):285-287. doi: 10.1093/bioinformatics/btaa1106. PMID: 33416830.
 
 Abandonned because the resulting segmentations were quite bad. Additionally, there isn't a lot of documentation on how to extract data from the tracks and the gui is deprecated.
 
@@ -61,11 +61,13 @@ Abandoned because their test data sets do not include brightfield images without
 
 # Final pipeline
 
-I ended up training my own model using the Cellpose gui : Stringer, C., Wang, T., Michaelos, M. et al. Cellpose: a generalist algorithm for cellular segmentation. Nat Methods 18, 100–106 (2021). https://doi.org/10.1038/s41592-020-01018-x
+I ended up training my own model using the cellpose gui : Stringer, C., Wang, T., Michaelos, M. et al. Cellpose: a generalist algorithm for cellular segmentation. Nat Methods 18, 100–106 (2021). https://doi.org/10.1038/s41592-020-01018-x
 
 For tracking, I used the trackMate ImageJ plugin : Ershov, D., Phan, M.-S., Pylvänäinen, J. W., Rigaud, S. U., Le Blanc, L., Charles-Orszag, A., … Tinevez, J.-Y. (2022). TrackMate 7: integrating state-of-the-art segmentation algorithms into tracking pipelines. Nature Methods, 19(7), 829–832. doi:10.1038/s41592-022-01507-1
 
-Then used the model to segment my images in ImageJ + the TrackMate plugin while using the following parameters:
+ImageJ integrates both cellpose and trackMate, very conveniently.
+
+First I used the model I trained to segment my images in ImageJ + the TrackMate plugin while using the following parameters:
 -  mask width on average = 25
 -  number of successive frames where the object can be lost: 10
 -  exclude cells that touch the border: yes
