@@ -1,5 +1,4 @@
-# Tracking microglial cells in brightfield rat cortical tricultures over 50 frames
-
+# Tracking microglial cells in brightfield rat cortical tricultures
 ## Introduction
 
 These brighfield images have been obtained from imaging rat cortical cell tricultures with the method developed in this lab.
