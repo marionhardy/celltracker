@@ -52,7 +52,7 @@ For this rotation, we would like to change the cell detection method from manual
 
 -  celltracker (used inside of CellProfiler): Hu T, Xu S, Wei L, Zhang X, Wang X. CellTracker: an automated toolbox for single-cell segmentation and tracking of time-lapse microscopy images. Bioinformatics. 2021 Apr 19;37(2):285-287. doi: 10.1093/bioinformatics/btaa1106. PMID: 33416830.
 
-Abandonned because the resulting segmentations were quite bad. Additionally, there isn't a lot of documentation on how to extract data from the tracks and the gui is deprecated.
+Abandonned because the resulting segmentations were quite bad. Additionally, there isn't a lot of documentation on how to extract data from the tracks and the gui is deprecated. Cellpose can be used in it but no video output with the masks and the tracks are possible.
 
 -  ultrack: https://github.com/royerlab/ultrack/tree/main
 
