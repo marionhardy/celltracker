@@ -1,0 +1,487 @@
+---
+title: "Cell tracking"
+author: "Marion Hardy"
+date: "2024-01-28"
+output: 
+  html_document: 
+    toc: true
+    theme: spacelab
+    highlight: monochrome
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message = FALSE, cache = TRUE, echo = FALSE, warning = F, cache.lazy = F)
+knitr::opts_chunk$set(fig.width=10, fig.height=12) 
+
+library(tidyverse)
+library(XML)
+library(openxlsx)
+library(cowplot)
+library(ggpubr)
+library(rstatix)
+
+```
+
+```{r Data loading, include=FALSE}
+
+## Point 1
+
+track1 <- read.csv("./data/Adj_Point_01/spots.csv", stringsAsFactors = F)
+track1 = track1[-c(1:3),]
+track1[,-1] = as.numeric(unlist(track1[,-1]))
+track1$TRACK_ID = as.factor(track1$TRACK_ID)
+track1 =
+  track1 %>% filter(!is.na(TRACK_ID))
+
+tr1 =  read.csv("./data/Adj_Point_01/tracks.csv", stringsAsFactors = F)
+tr1 = tr1[-c(1:3),]
+tr1[,-1] = as.numeric(unlist(tr1[,-1]))
+tr1$TRACK_ID = as.factor(tr1$TRACK_ID)
+
+## Point 3
+
+track3 <- read.csv("./data/Point_03/spots.csv", stringsAsFactors = F)
+track3 = track3[-c(1:3),]
+track3[,-1] = as.numeric(unlist(track3[,-1]))
+track3$TRACK_ID = as.factor(track3$TRACK_ID)
+track3 =
+  track3 %>% filter(!is.na(TRACK_ID))
+
+tr3 =  read.csv("./data/Point_03/tracks.csv", stringsAsFactors = F)
+tr3 = tr3[-c(1:3),]
+tr3[,-1] = as.numeric(unlist(tr3[,-1]))
+tr3$TRACK_ID = as.factor(tr3$TRACK_ID)
+
+## Point 6
+
+track6 <- read.csv("./data/Point_06/spots.csv", stringsAsFactors = F)
+track6 = track6[-c(1:3),]
+track6[,-1] = as.numeric(unlist(track6[,-1]))
+track6$TRACK_ID = as.factor(track6$TRACK_ID)
+track6 =
+  track6 %>% filter(!is.na(TRACK_ID))
+
+tr6 =  read.csv("./data/Point_06/tracks.csv", stringsAsFactors = F)
+tr6 = tr6[-c(1:3),]
+tr6[,-1] = as.numeric(unlist(tr6[,-1]))
+tr6$TRACK_ID = as.factor(tr6$TRACK_ID)
+
+## Point 8
+
+track8 <- read.csv("./data/Point_08/spots.csv", stringsAsFactors = F)
+track8 = track8[-c(1:3),]
+track8[,-1] = as.numeric(unlist(track8[,-1]))
+track8$TRACK_ID = as.factor(track8$TRACK_ID)
+track8 =
+  track8 %>% filter(!is.na(TRACK_ID))
+
+tr8 =  read.csv("./data/Point_08/tracks.csv", stringsAsFactors = F)
+tr8 = tr8[-c(1:3),]
+tr8[,-1] = as.numeric(unlist(tr8[,-1]))
+tr8$TRACK_ID = as.factor(tr8$TRACK_ID)
+```
+
+# Introduction
+
+Electrotaxis on tricultures - 2 controls: points 01 and 03 - 2 electrotaxed: points 06 and 08
+
+Tracked over 4 hours, with 49 frames
+
+Points 3, 6 and 8 have not been adjusted for well sliding down throughout imaging. Could accoutn for that by filtering a minimum track length but the others measurements will be biased anyway.
+
+```{r}
+
+head(track3)
+
+head(table(track3$TRACK_ID, track3$FRAME))
+
+```
+
+TRACK_ID is the reference to the track, the number of time it appears is the number of frames it was tracked through. Every line is the track, its frame and the characteristics of the cell being tracked (area, circularity, intensity, ...)
+
+# Spider plotting the tracks if possible
+
+```{r, fig.height=3, fig.width=3}
+
+p1 =
+track1 %>% 
+  ggplot(aes(x = POSITION_X,
+             y = POSITION_Y,
+             color = TRACK_ID))+
+  geom_line()+ 
+  theme_bw()+
+  theme(legend.position = "none")+
+  labs(title = "Point 01: Control")
+
+p2 =
+track3 %>% 
+  ggplot(aes(x = POSITION_X,
+             y = POSITION_Y,
+             color = TRACK_ID))+
+  geom_line()+ 
+  theme_bw()+
+  theme(legend.position = "none")+
+  labs(title = "Point 03: Control")
+
+p3 =
+track6 %>% 
+  ggplot(aes(x = POSITION_X,
+             y = POSITION_Y,
+             color = TRACK_ID))+
+  geom_line()+ 
+  theme_bw()+
+  theme(legend.position = "none")+
+  labs(title = "Point 06: Electrotaxis")
+
+p4 =
+track8 %>% 
+  ggplot(aes(x = POSITION_X,
+             y = POSITION_Y,
+             color = TRACK_ID))+
+  geom_line()+ 
+  theme_bw()+
+  theme(legend.position = "none")+
+  labs(title = "Point 08: Electrotaxis")
+
+
+```
+
+```{r, fig.height=10, fig.width=10}
+
+plot_grid(p1, p2, p3, p4, ncol =2 , align = "hv")
+
+```
+
+## Centering the tracks to 0,0
+
+```{r}
+
+track1_0 =
+  track1 %>% 
+  group_by(TRACK_ID) %>% 
+  filter(FRAME == min(FRAME)) %>% 
+  select(TRACK_ID, POSITION_X, POSITION_Y)
+
+colnames(track1_0) = c("TRACK_ID", "X_initial", "Y_initial")
+
+track1 = left_join(track1, track1_0)
+
+
+track1 = 
+track1 %>% 
+  group_by(TRACK_ID) %>% 
+  mutate(X_adjusted = POSITION_X - X_initial,
+         Y_adjusted = POSITION_Y - Y_initial)
+
+
+p5 = 
+track1 %>% 
+  ggplot(aes(x = X_adjusted,
+             y = Y_adjusted,
+             color = TRACK_ID))+
+  geom_line()+ 
+  theme_bw()+
+  scale_x_continuous(limits = c(-150, 150))+
+  scale_y_continuous(limits = c(-150, 220))+
+  theme(legend.position = "none")+
+  labs(title = "Point 01: Control")
+
+```
+
+```{r}
+
+track3_0 =
+  track3 %>% 
+  group_by(TRACK_ID) %>% 
+  filter(FRAME == min(FRAME)) %>% 
+  select(TRACK_ID, POSITION_X, POSITION_Y)
+
+colnames(track3_0) = c("TRACK_ID", "X_initial", "Y_initial")
+
+track3 = left_join(track3, track3_0)
+
+
+track3 = 
+track3 %>% 
+  group_by(TRACK_ID) %>% 
+  mutate(X_adjusted = POSITION_X - X_initial,
+         Y_adjusted = POSITION_Y - Y_initial)
+
+
+p6 = 
+track3 %>% 
+  ggplot(aes(x = X_adjusted,
+             y = Y_adjusted,
+             color = TRACK_ID))+
+  geom_line()+ 
+  theme_bw()+
+  scale_x_continuous(limits = c(-150, 150))+
+  scale_y_continuous(limits = c(-150, 220))+
+  theme(legend.position = "none")+
+  labs(title = "Point 03: Control")
+
+```
+
+```{r}
+## Point 6
+
+track6_0 =
+  track6 %>% 
+  group_by(TRACK_ID) %>% 
+  filter(FRAME == min(FRAME)) %>% 
+  select(TRACK_ID, POSITION_X, POSITION_Y)
+
+colnames(track6_0) = c("TRACK_ID", "X_initial", "Y_initial")
+
+track6 = left_join(track6, track6_0)
+
+
+track6 = 
+track6 %>% 
+  group_by(TRACK_ID) %>% 
+  mutate(X_adjusted = POSITION_X - X_initial,
+         Y_adjusted = POSITION_Y - Y_initial)
+
+
+p7 = 
+track6 %>% 
+  ggplot(aes(x = X_adjusted,
+             y = Y_adjusted,
+             color = TRACK_ID))+
+  geom_line()+ 
+  theme_bw()+
+  scale_x_continuous(limits = c(-150, 150))+
+  scale_y_continuous(limits = c(-150, 220))+
+  theme(legend.position = "none")+
+  labs(title = "Point 06: Electrotaxis")
+```
+
+```{r}
+## Point 8
+
+track8_0 =
+  track8 %>% 
+  group_by(TRACK_ID) %>% 
+  filter(FRAME == min(FRAME)) %>% 
+  select(TRACK_ID, POSITION_X, POSITION_Y)
+
+colnames(track8_0) = c("TRACK_ID", "X_initial", "Y_initial")
+
+track8 = left_join(track8, track8_0)
+
+
+track8 = 
+track8 %>% 
+  group_by(TRACK_ID) %>% 
+  mutate(X_adjusted = POSITION_X - X_initial,
+         Y_adjusted = POSITION_Y - Y_initial)
+
+
+p8 = 
+track8 %>% 
+  ggplot(aes(x = X_adjusted,
+             y = Y_adjusted,
+             color = TRACK_ID))+
+  geom_line()+ 
+  theme_bw()+
+  scale_x_continuous(limits = c(-150, 150))+
+  scale_y_continuous(limits = c(-150, 220))+
+  theme(legend.position = "none")+
+  labs(title = "Point 08: Electrotaxis")
+
+```
+
+```{r, fig.height=10, fig.width=10}
+
+plot_grid(p5, p6, p7, p8, ncol = 2 , align = "hv")
+
+```
+
+# Let's get some numbers on that
+
+## Checking average displacement
+
+```{r, fig.width=6, fig.height=3}
+
+tr1$track = "track1"
+tr3$track = "track3"
+tr6$track = "track6"
+tr8$track = "track8"
+
+tr1$condition = "control"
+tr3$condition = "control"
+tr6$condition = "electrotaxis"
+tr8$condition = "electrotaxis"
+
+all <- tr1 %>%
+  full_join(tr3) %>%
+  full_join(tr6) %>% 
+  full_join(tr8)
+
+
+all %>% 
+  ggplot(aes(x = TRACK_DISPLACEMENT, col = track, fill = track))+
+  geom_freqpoly()
+
+```
+
+More cells are moving in the controls but they are moving lesser distances. NB: This isn't normalized to the total amount of cells tracked per condition.
+
+## Get some stats
+
+### Wilcoxon test with group control (less permissive than t test because non parametric)
+
+Maybe the appropriate test would be a Mann-Whitney if we consider the samples independent
+
+I'm asking the question: Is CTRL parameter LESSER than electrotaxis??
+
+```{r}
+
+## stat test 
+
+stat.disp <- all %>% wilcox_test(TRACK_DISPLACEMENT ~ condition, 
+                                 ref.group = "control",
+                                 exact = FALSE, alternative = "less") %>%
+  add_significance()
+stat.disp
+
+stat.tot <- all %>% wilcox_test(TOTAL_DISTANCE_TRAVELED ~ condition, 
+                                ref.group = "control",
+                                 exact = FALSE, alternative = "less") %>%
+  add_significance()
+stat.tot
+
+stat.lin <- all %>% wilcox_test(LINEARITY_OF_FORWARD_PROGRESSION ~ condition, 
+                                ref.group = "control",
+                                 exact = FALSE, alternative = "less") %>%
+  add_significance()
+stat.lin
+
+stat.dir <- all %>% wilcox_test(MEAN_DIRECTIONAL_CHANGE_RATE ~ condition, 
+                                ref.group = "control",
+                                 exact = FALSE, alternative = "less") %>%
+  add_significance()
+stat.dir
+
+stat.sp <- all %>% wilcox_test(TRACK_MEAN_SPEED ~ condition, 
+                               ref.group = "control",
+                               exact = FALSE, alternative = "less") %>%
+  add_significance()
+stat.sp
+
+## track displacement
+
+p1 = 
+all %>% 
+  ggplot(aes(x = track, y = TRACK_DISPLACEMENT, fill = condition))+
+  geom_violin()+
+  geom_jitter(color="black", size=0.7, alpha=0.25) +
+  theme_bw()+
+  labs(title = "No filtering")
+
+p2 = 
+all %>% 
+  filter(TRACK_DISPLACEMENT > 25) %>% 
+  ggplot(aes(x = track, y = TRACK_DISPLACEMENT, fill = condition))+
+  geom_boxplot()+
+  geom_jitter(color="black", size=0.4, alpha=0.9) +
+  theme_bw()+
+  labs(title = " >25 pixels ")
+
+## track total distance traveled
+
+p3 = 
+all %>% 
+  ggplot(aes(x = track, y = TOTAL_DISTANCE_TRAVELED, fill = condition))+
+  geom_violin()+
+  geom_jitter(color="black", size=0.7, alpha=0.25) +
+  theme_bw()+
+  labs(title = "No filtering")
+
+p4 = 
+all %>% 
+  filter(TRACK_DISPLACEMENT > 25) %>% 
+  ggplot(aes(x = track, y = TOTAL_DISTANCE_TRAVELED, fill = condition))+
+  geom_boxplot()+
+  geom_jitter(color="black", size=0.4, alpha=0.9) +
+  theme_bw()+
+  labs(title = " >25 pixels ")
+
+## linearity of travel
+
+p5 = 
+all %>% 
+  ggplot(aes(x = track, y = LINEARITY_OF_FORWARD_PROGRESSION, fill = condition))+
+  geom_violin()+
+  geom_jitter(color="black", size=0.7, alpha=0.25) +
+  theme_bw()+
+  labs(title = "Linearity of travel")
+
+## track mean speed
+
+p6 = 
+all %>% 
+  ggplot(aes(x = track, y = MEAN_DIRECTIONAL_CHANGE_RATE, fill = condition))+
+  geom_violin()+
+  geom_jitter(color="black", size=0.7, alpha=0.25) +
+  theme_bw()+
+  labs(title = "Mean directional change")
+
+```
+
+### Violin plots of motion parameters
+
+```{r, fig.width=10, fig.height=10}
+
+plot_grid(p1, p2, p3, p4, p5, p6, ncol = 2 , align = "hv")
+
+```
+
+```{r, fig.width=6, fig.height=4}
+p7 = 
+all %>% 
+  ggplot(aes(x = track, y = TRACK_MEAN_SPEED, fill = condition))+
+  geom_violin()+
+  geom_jitter(color="black", size=0.7, alpha=0.25) +
+  theme_bw()+
+  labs(title = "Mean speed")
+
+p7
+```
+
+
+-   TRACK_DISPLACEMENT: length of the vector between first frame point coordinates and last frame point coordinates
+
+-   TOTAL_DISTANCE_TRAVELED: total length of cell track
+
+-   LINEARITY OF FORWARD PROGRESSION : Linearity of travel = mean straight line speed /track mean speed.
+
+-   MEAN_DIRECTIONAL_CHANGE_RATE :measures the angle between two succeeding links, averaged over all the links of a track
+
+
+
+# Conclusions
+
+**Control condition** :
+
+\- More speed
+
+\- More directional changes
+
+\- More total distance traveled
+
+**Electrotaxis** :
+
+\- More displacement (cells are going further away)
+
+\- More linear in their motion
+
+**Looks like in the control condition, cell are sort of patrolling around with high speed but no orientation whereas the "electrotaxed" cells move more purposefuly but slower.**
+
+# R session info
+
+```{r}
+sessionInfo()
+```
